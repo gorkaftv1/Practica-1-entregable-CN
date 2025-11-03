@@ -1,0 +1,343 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Lambda with ECR Image"
+
+Resources:
+  GetCarsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: get-cars-lambda
+      # PackageType: Image is mandatory for a lambda with docker loaded from ECR
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/cars-service:latest"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      # Timeout before lambda returns error in seconds
+      Timeout: 30
+      # Memory size in Mb
+      MemorySize: 256
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          HANDLER_NAME: get
+
+  ListCarsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: list-cars-lambda
+      # PackageType: Image is mandatory for a lambda with docker loaded from ECR
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/cars-service:latest"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      # Timeout before lambda returns error in seconds
+      Timeout: 30
+      # Memory size in Mb
+      MemorySize: 256
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          HANDLER_NAME: list
+    
+  PostCarsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: post-cars-lambda
+      # PackageType: Image is mandatory for a lambda with docker loaded from ECR
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/cars-service:latest"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      # Timeout before lambda returns error in seconds
+      Timeout: 30
+      # Memory size in Mb
+      MemorySize: 256
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          HANDLER_NAME: create
+  
+  DeleteCarsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: delete-cars-lambda
+      # PackageType: Image is mandatory for a lambda with docker loaded from ECR
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/cars-service:latest"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      # Timeout before lambda returns error in seconds
+      Timeout: 30
+      # Memory size in Mb
+      MemorySize: 256
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          HANDLER_NAME: delete
+
+  PutCarsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: put-cars-lambda
+      # PackageType: Image is mandatory for a lambda with docker loaded from ECR
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/cars-service:latest"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      # Timeout before lambda returns error in seconds
+      Timeout: 30
+      # Memory size in Mb
+      MemorySize: 256
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          HANDLER_NAME: update
+  # Lambda log_group
+  GetCarsLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${GetCarsLambda}"
+      RetentionInDays: 7
+  ListCarsLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ListCarsLambda}"
+      RetentionInDays: 7
+  PostCarsLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${PostCarsLambda}"
+      RetentionInDays: 7
+  DeleteCarsLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${DeleteCarsLambda}"
+      RetentionInDays: 7
+  PutCarsLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${PutCarsLambda}"
+      RetentionInDays: 7
+
+  # API Gateway REST API
+  CarsRestAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: CarsAPI
+      Description: API Gateway for Cars Service
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  # API Key for securing endpoints
+  CarsApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    DependsOn: CarsAPIDeployment
+    Properties:
+      Name: CarsAPIKey
+      Description: API Key for Cars API
+      Enabled: true
+      StageKeys:
+        - RestApiId: !Ref CarsRestAPI
+          StageName: prod
+
+  # Usage Plan
+  CarsUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn: CarsAPIDeployment
+    Properties:
+      UsagePlanName: CarsUsagePlan
+      Description: Usage plan for Cars API
+      ApiStages:
+        - ApiId: !Ref CarsRestAPI
+          Stage: prod
+      Throttle:
+        RateLimit: 100
+        BurstLimit: 200
+
+  # Associate API Key with Usage Plan
+  CarsUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref CarsApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref CarsUsagePlan
+
+  # Resource /cars
+  CarsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ParentId: !GetAtt CarsRestAPI.RootResourceId
+      PathPart: cars
+
+  # Resource /cars/{id}
+  CarsIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ParentId: !Ref CarsResource
+      PathPart: "{id}"
+
+  # Lambda Invoke Permissions
+  ListCarsLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ListCarsLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CarsRestAPI}/*/*/*"
+
+  GetCarsLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetCarsLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CarsRestAPI}/*/*/*"
+
+  PostCarsLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref PostCarsLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CarsRestAPI}/*/*/*"
+
+  PutCarsLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref PutCarsLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CarsRestAPI}/*/*/*"
+
+  DeleteCarsLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DeleteCarsLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CarsRestAPI}/*/*/*"
+
+  # Method GET /cars (List all cars)
+  ListCarsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ResourceId: !Ref CarsResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ListCarsLambda.Arn}/invocations"
+
+  # Method POST /cars (Create car)
+  PostCarsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ResourceId: !Ref CarsResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PostCarsLambda.Arn}/invocations"
+
+  # Method GET /cars/{id} (Get car by ID)
+  GetCarMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ResourceId: !Ref CarsIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      RequestParameters:
+        method.request.path.id: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetCarsLambda.Arn}/invocations"
+
+  # Method PUT /cars/{id} (Update car)
+  PutCarMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ResourceId: !Ref CarsIdResource
+      HttpMethod: PUT
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      RequestParameters:
+        method.request.path.id: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PutCarsLambda.Arn}/invocations"
+
+  # Method DELETE /cars/{id} (Delete car)
+  DeleteCarMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ResourceId: !Ref CarsIdResource
+      HttpMethod: DELETE
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      RequestParameters:
+        method.request.path.id: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteCarsLambda.Arn}/invocations"
+
+  # API Deployment
+  CarsAPIDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - ListCarsMethod
+      - PostCarsMethod
+      - GetCarMethod
+      - PutCarMethod
+      - DeleteCarMethod
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      StageName: prod
+      StageDescription:
+        ThrottlingRateLimit: 100
+        ThrottlingBurstLimit: 200
+
+Outputs:
+  GetCarsLambdaArn:
+    Description: ARN de la función Lambda
+    Value: !GetAtt GetCarsLambda.Arn
+  ListCarsLambdaArn:
+    Description: ARN de la función Lambda
+    Value: !GetAtt ListCarsLambda.Arn
+  PostCarsLambdaArn:
+    Description: ARN de la función Lambda
+    Value: !GetAtt PostCarsLambda.Arn
+  DeleteCarsLambdaArn:
+    Description: ARN de la función Lambda
+    Value: !GetAtt DeleteCarsLambda.Arn
+  PutCarsLambdaArn:
+    Description: ARN de la función Lambda
+    Value: !GetAtt PutCarsLambda.Arn
+  ApiGatewayUrl:
+    Description: URL base de la API Gateway
+    Value: !Sub "https://${CarsRestAPI}.execute-api.${AWS::Region}.amazonaws.com/prod"
+  ApiKeyId:
+    Description: ID de la API Key
+    Value: !Ref CarsApiKey
+  CarsEndpoint:
+    Description: Endpoint completo para /cars
+    Value: !Sub "https://${CarsRestAPI}.execute-api.${AWS::Region}.amazonaws.com/prod/cars"

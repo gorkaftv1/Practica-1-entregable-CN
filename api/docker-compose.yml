@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-8080}:8080"
+    env_file:
+      - .env
+    environment:
+      DYNAMODB_ENDPOINT: http://dynamodb:8000
+      DYNAMODB_REGION: ${DYNAMODB_REGION:-us-east-1}
+    volumes:
+      - .:/app
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"const http=require('http'); const req=http.get('http://localhost:8080/health', res=>process.exit(res.statusCode===200?0:1)); req.on('error', ()=>process.exit(1)); setTimeout(()=>process.exit(1),2000)\" || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    profiles:
+      - dynamodb
+    ports:
+      - "8000:8000"
+    volumes:
+      - dynamodb_data:/home/dynamodblocal
+    # Si quieres in-memory quita -dbPath y elimina el volumen
+    command: -jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  dynamodb_data:

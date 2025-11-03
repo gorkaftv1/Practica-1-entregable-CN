@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cars API - Frontend</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🚗 Cars API Manager</h1>
+            <p>Gestión de vehículos</p>
+        </header>
+
+        <!-- Configuration Panel -->
+        <div class="config-panel" id="configPanel">
+            <h2>⚙️ Configuración de API</h2>
+            <div class="form-group">
+                <label for="apiUrl">URL de la API:</label>
+                <input 
+                    type="text" 
+                    id="apiUrl" 
+                    placeholder="https://xxxxx.execute-api.us-east-1.amazonaws.com/prod"
+                    value="http://localhost:8080"
+                >
+            </div>
+            <div class="form-group">
+                <label for="apiKey">API Key:</label>
+                <input 
+                    type="password" 
+                    id="apiKey" 
+                    placeholder="Ingresa tu API Key"
+                >
+                <button type="button" id="toggleApiKey" class="btn-toggle">👁️</button>
+            </div>
+            <div class="form-actions">
+                <button id="saveConfig" class="btn btn-primary">💾 Guardar Configuración</button>
+                <button id="testConnection" class="btn btn-secondary">🔌 Probar Conexión</button>
+            </div>
+            <div id="connectionStatus" class="status-message"></div>
+        </div>
+
+        <!-- Toggle Config Button -->
+        <button id="toggleConfig" class="btn-toggle-panel">⚙️ Configuración</button>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Actions Bar -->
+            <div class="actions-bar">
+                <button id="refreshCars" class="btn btn-primary">🔄 Actualizar</button>
+                <button id="addCarBtn" class="btn btn-success">➕ Nuevo Coche</button>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat-card">
+                    <h3 id="totalCars">0</h3>
+                    <p>Total Coches</p>
+                </div>
+            </div>
+
+            <!-- Cars List -->
+            <div class="cars-container" id="carsContainer">
+                <div class="loading">Cargando coches...</div>
+            </div>
+        </div>
+
+        <!-- Modal for Add/Edit Car -->
+        <div id="carModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2 id="modalTitle">Nuevo Coche</h2>
+                <form id="carForm">
+                    <input type="hidden" id="carId">
+                    
+                    <div class="form-group">
+                        <label for="plate">Matrícula *</label>
+                        <input type="text" id="plate" required placeholder="ABC-1234">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="make">Marca *</label>
+                        <input type="text" id="make" required placeholder="Toyota">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="model">Modelo *</label>
+                        <input type="text" id="model" required placeholder="Corolla">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="year">Año *</label>
+                        <input type="number" id="year" required min="1886" max="3000" placeholder="2023">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="owner">Propietario *</label>
+                        <input type="text" id="owner" required placeholder="Juan Pérez">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">💾 Guardar</button>
+                        <button type="button" id="cancelBtn" class="btn btn-secondary">❌ Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

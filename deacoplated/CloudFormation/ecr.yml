@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Single ECR repository for the cars service (shared image)."
+
+Parameters:
+  RepositoryName:
+    Type: String
+    Default: "cars-service"
+    Description: "ECR repository name for the shared image."
+
+Resources:
+  CarsEcrRepo:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref RepositoryName
+      ImageScanningConfiguration:
+        ScanOnPush: false
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep only last 5 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 5
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+
+Outputs:
+  RepositoryUri:
+    Description: ECR repository URI
+    Value: !GetAtt CarsEcrRepo.RepositoryUri
+    Export:
+      Name: !Sub "${AWS::StackName}-CarsEcrRepoUri"

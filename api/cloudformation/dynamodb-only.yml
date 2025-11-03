@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "DynamoDB table para la app de cars con GSI en 'plate' (compatible con el repo)"
+
+Parameters:
+  TableName:
+    Type: String
+    Default: cars
+    Description: DynamoDB table Name
+
+Resources:
+  CarsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref TableName
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: plate
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: plate-index
+          KeySchema:
+            - AttributeName: plate
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+Outputs:
+  TableName:
+    Description: DynamoDB table name
+    Value: !Ref CarsTable
+
+  TableArn:
+    Description: ARN DynamoDB table
+    Value: !GetAtt CarsTable.Arn
+
+  PlateIndexName:
+    Description: Name of the GSI for plate
+    Value: plate-index

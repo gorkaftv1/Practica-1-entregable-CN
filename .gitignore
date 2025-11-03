@@ -1,0 +1,33 @@
+# Node modules
+/deacoplated/node_modules
+/api/node_modules
+node_modules/
+
+# Environment variables (NUNCA subir credenciales)
+.env
+.env.local
+.env.production
+.env.development
+/api/.env
+/deacoplated/.env
+
+# AWS credentials (CRÍTICO)
+aws-configure.ps1
+.aws/
+*.pem
+*.key
+
+# Build outputs
+dist/
+build/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
