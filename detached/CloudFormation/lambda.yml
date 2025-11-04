@@ -224,6 +224,35 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CarsRestAPI}/*/*/*"
 
+  # Method OPTIONS /cars (CORS Preflight)
+  OptionsCarsMockMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ResourceId: !Ref CarsResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Accept,X-Requested-With,Authorization,x-api-key'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            ResponseTemplates:
+              application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
   # Method GET /cars (List all cars)
   ListCarsMethod:
     Type: AWS::ApiGateway::Method
@@ -251,6 +280,35 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PostCarsLambda.Arn}/invocations"
+
+  # Method OPTIONS /cars/{id} (CORS Preflight)
+  OptionsCarIdMockMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ResourceId: !Ref CarsIdResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Accept,X-Requested-With,Authorization,x-api-key'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            ResponseTemplates:
+              application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
 
   # Method GET /cars/{id} (Get car by ID)
   GetCarMethod:
@@ -304,6 +362,8 @@ Resources:
   CarsAPIDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
+      - OptionsCarsMockMethod
+      - OptionsCarIdMockMethod
       - ListCarsMethod
       - PostCarsMethod
       - GetCarMethod

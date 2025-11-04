@@ -18,7 +18,7 @@ try {
     $dockerfileArg = "-f `"$Dockerfile`""
   }
 
-  aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${AWSID}.dkr.ecr.us-east-1.amazonaws.com
+  aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 975050237180.dkr.ecr.us-east-1.amazonaws.com
 
   Write-Host "Building image '$EcrName' from context '$Path'..."
   if ($dockerfileArg -ne "") {
