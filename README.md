@@ -76,7 +76,7 @@ Notas: el coste puede aumentar si se requieren múltiples tareas en paralelo, ma
 
 <!-- Añadir aquí la imagen del diagrama de la arquitectura desacoplada -->
 
-![Diagrama arquitectura desacoplada](./deacoplated/ArquitecturaB.png)
+![Diagrama arquitectura desacoplada](./detached/ArquitecturaB.png)
 
 *(Reemplace la ruta de la imagen por la que corresponda.)*
 #### TODO
@@ -95,11 +95,11 @@ Diagrama de alto nivel del flujo: Cliente → API Gateway → Lambda → DynamoD
 ### 3.3 Recursos
 
 - API Gateway (endpoints y métodos).
-- Funciones AWS Lambda (handlers en `deacoplated/src/interface/aws-lambda/handlers/`). Con timeouts de 30 segundos y una memoria de 256 Mb 
+- Funciones AWS Lambda (handlers en `detached/src/interface/aws-lambda/handlers/`). Con timeouts de 30 segundos y una memoria de 256 Mb 
 - LogsGroups para cada Lambda, con retención de 7 días
 - DynamoDB (tabla compartida con la arquitectura acoplada).
-- Código y utilidades: `deacoplated/src/common/`.
-- Plantillas CloudFormation: `deacoplated/CloudFormation/`.
+- Código y utilidades: `detached/src/common/`.
+- Plantillas CloudFormation: `detached/CloudFormation/`.
 
 ### 3.4 Tabla de precios 
 #### A Costes básicos

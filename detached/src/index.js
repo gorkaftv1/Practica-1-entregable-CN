@@ -10,11 +10,12 @@ const options = require('./interface/aws-lambda/handlers/options');
 
 const which = (process.env.HANDLER_NAME || process.env.AWS_LAMBDA_FUNCTION_NAME || 'get').toLowerCase();
 
-// CORS headers
+// CORS headers - matching /api configuration
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, x-api-key',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Accept, X-Requested-With, Authorization, x-api-key',
+  'Access-Control-Expose-Headers': 'Content-Length, X-Request-Id',
   'Content-Type': 'application/json'
 };
 

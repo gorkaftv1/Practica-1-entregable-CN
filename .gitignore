@@ -1,5 +1,5 @@
 # Node modules
-/deacoplated/node_modules
+/detached/node_modules
 /api/node_modules
 node_modules/
 
@@ -9,7 +9,7 @@ node_modules/
 .env.production
 .env.development
 /api/.env
-/deacoplated/.env
+/detached/.env
 
 # AWS credentials (CRÍTICO)
 aws-configure.ps1
