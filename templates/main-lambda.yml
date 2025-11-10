@@ -152,7 +152,7 @@ Resources:
         - ApiId: !Ref CarsRestAPI
           Stage: prod
       Throttle:
-        RateLimit: 100
+        RateLimit: 10
         BurstLimit: 200
 
   CarsUsagePlanKey:

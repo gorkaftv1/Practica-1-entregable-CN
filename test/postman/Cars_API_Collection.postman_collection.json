@@ -1,0 +1,133 @@
+{
+	"info": {
+		"_postman_id": "12345678-abcd-1234-abcd-1234567890ab",
+		"name": "Cars API - CRUD Operations",
+		"description": "API REST de gestión de vehículos en AWS",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{API_BASE_URL}}/health",
+					"host": ["{{API_BASE_URL}}"],
+					"path": ["health"]
+				}
+			}
+		},
+		{
+			"name": "Create Car",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 201) {",
+							"    const response = pm.response.json();",
+							"    pm.environment.set(\"LAST_CAR_ID\", response.data.id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{"key": "x-api-key", "value": "{{API_KEY}}"},
+					{"key": "Content-Type", "value": "application/json"}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"plate\": \"1234ABC\",\n    \"make\": \"Toyota\",\n    \"model\": \"Corolla\",\n    \"year\": 2023,\n    \"owner\": \"John Doe\"\n}"
+				},
+				"url": {
+					"raw": "{{API_BASE_URL}}/cars",
+					"host": ["{{API_BASE_URL}}"],
+					"path": ["cars"]
+				}
+			}
+		},
+		{
+			"name": "List All Cars",
+			"request": {
+				"method": "GET",
+				"header": [
+					{"key": "x-api-key", "value": "{{API_KEY}}"}
+				],
+				"url": {
+					"raw": "{{API_BASE_URL}}/cars",
+					"host": ["{{API_BASE_URL}}"],
+					"path": ["cars"]
+				}
+			}
+		},
+		{
+			"name": "Get Car by ID",
+			"request": {
+				"method": "GET",
+				"header": [
+					{"key": "x-api-key", "value": "{{API_KEY}}"}
+				],
+				"url": {
+					"raw": "{{API_BASE_URL}}/cars/{{LAST_CAR_ID}}",
+					"host": ["{{API_BASE_URL}}"],
+					"path": ["cars", "{{LAST_CAR_ID}}"]
+				}
+			}
+		},
+		{
+			"name": "Update Car",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{"key": "x-api-key", "value": "{{API_KEY}}"},
+					{"key": "Content-Type", "value": "application/json"}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"plate\": \"5678XYZ\",\n    \"make\": \"Honda\",\n    \"model\": \"Civic\",\n    \"year\": 2024,\n    \"owner\": \"Jane Smith\"\n}"
+				},
+				"url": {
+					"raw": "{{API_BASE_URL}}/cars/{{LAST_CAR_ID}}",
+					"host": ["{{API_BASE_URL}}"],
+					"path": ["cars", "{{LAST_CAR_ID}}"]
+				}
+			}
+		},
+		{
+			"name": "Delete Car",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{"key": "x-api-key", "value": "{{API_KEY}}"}
+				],
+				"url": {
+					"raw": "{{API_BASE_URL}}/cars/{{LAST_CAR_ID}}",
+					"host": ["{{API_BASE_URL}}"],
+					"path": ["cars", "{{LAST_CAR_ID}}"]
+				}
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "API_BASE_URL",
+			"value": "https://xxxxxxxx.execute-api.us-east-1.amazonaws.com/prod",
+			"type": "string"
+		},
+		{
+			"key": "API_KEY",
+			"value": "your-api-key-here",
+			"type": "string"
+		},
+		{
+			"key": "LAST_CAR_ID",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
