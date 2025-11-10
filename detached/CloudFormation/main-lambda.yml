@@ -1,0 +1,757 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Lambda with ECR Image"
+
+Resources:
+
+# ============================================================================
+# LAMBDA FUNCTIONS
+# ============================================================================
+  GetCarsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: get-cars-lambda
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/cars-service:latest"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 30
+      MemorySize: 128
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          HANDLER_NAME: get
+
+  ListCarsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: list-cars-lambda
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/cars-service:latest"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 30
+      MemorySize: 128
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          HANDLER_NAME: list
+    
+  PostCarsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: post-cars-lambda
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/cars-service:latest"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 30
+      MemorySize: 128
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          HANDLER_NAME: create
+  
+  DeleteCarsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: delete-cars-lambda
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/cars-service:latest"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 30
+      MemorySize: 128
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          HANDLER_NAME: delete
+
+  PutCarsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: put-cars-lambda
+      PackageType: Image
+      Code:
+        ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/cars-service:latest"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+      Timeout: 30
+      MemorySize: 128
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          HANDLER_NAME: update
+
+# ============================================================================
+# LAMBDA LOG GROUPS
+# ============================================================================
+  GetCarsLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${GetCarsLambda}"
+      RetentionInDays: 7
+
+  ListCarsLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ListCarsLambda}"
+      RetentionInDays: 7
+
+  PostCarsLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${PostCarsLambda}"
+      RetentionInDays: 7
+
+  DeleteCarsLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${DeleteCarsLambda}"
+      RetentionInDays: 7
+
+  PutCarsLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${PutCarsLambda}"
+      RetentionInDays: 7
+
+# ============================================================================
+# API GATEWAY RESOURCES
+# ============================================================================
+  CarsRestAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: CarsAPI
+      Description: API Gateway for Cars Service
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  CarsApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    DependsOn: CarsAPIStage
+    Properties:
+      Name: CarsAPIKey
+      Description: API Key for Cars API
+      Enabled: true
+      StageKeys:
+        - RestApiId: !Ref CarsRestAPI
+          StageName: prod
+
+  CarsUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn: CarsAPIStage
+    Properties:
+      UsagePlanName: CarsUsagePlan
+      Description: Usage plan for Cars API
+      ApiStages:
+        - ApiId: !Ref CarsRestAPI
+          Stage: prod
+      Throttle:
+        RateLimit: 100
+        BurstLimit: 200
+
+  CarsUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref CarsApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref CarsUsagePlan
+
+  CarsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ParentId: !GetAtt CarsRestAPI.RootResourceId
+      PathPart: cars
+
+  CarsIdResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ParentId: !Ref CarsResource
+      PathPart: "{id}"
+
+# ============================================================================
+# LAMBDA PERMISSIONS FOR API GATEWAY
+# ============================================================================
+
+  ListCarsLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ListCarsLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CarsRestAPI}/*/*/*"
+
+  GetCarsLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetCarsLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CarsRestAPI}/*/*/*"
+
+  PostCarsLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref PostCarsLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CarsRestAPI}/*/*/*"
+
+  PutCarsLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref PutCarsLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CarsRestAPI}/*/*/*"
+
+  DeleteCarsLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DeleteCarsLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CarsRestAPI}/*/*/*"
+
+# ============================================================================
+# API CORS AND METHODS
+# ============================================================================
+
+  OptionsCarsMockMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ResourceId: !Ref CarsResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Accept,X-Requested-With,Authorization,x-api-key'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            ResponseTemplates:
+              application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
+  ListCarsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ResourceId: !Ref CarsResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ListCarsLambda.Arn}/invocations"
+
+  PostCarsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ResourceId: !Ref CarsResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PostCarsLambda.Arn}/invocations"
+
+  OptionsCarIdMockMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ResourceId: !Ref CarsIdResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Accept,X-Requested-With,Authorization,x-api-key'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            ResponseTemplates:
+              application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
+  GetCarMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ResourceId: !Ref CarsIdResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      RequestParameters:
+        method.request.path.id: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetCarsLambda.Arn}/invocations"
+
+  PutCarMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ResourceId: !Ref CarsIdResource
+      HttpMethod: PUT
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      RequestParameters:
+        method.request.path.id: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PutCarsLambda.Arn}/invocations"
+
+  DeleteCarMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      ResourceId: !Ref CarsIdResource
+      HttpMethod: DELETE
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      RequestParameters:
+        method.request.path.id: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteCarsLambda.Arn}/invocations"
+
+# ============================================================================
+# API DOCUMENTATION RESOURCES
+# ============================================================================
+
+  APIDocumentation:
+    Type: AWS::ApiGateway::DocumentationPart
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      Location:
+        Type: API
+      Properties: |
+        {
+          "description": "API para gestión de cars con autenticación por API Key. Esta API permite realizar operaciones CRUD sobre una base de datos de vehículos.",
+          "info": {
+            "title": "Cars API",
+            "version": "1.0.0",
+            "contact": {
+              "name": "API Support",
+              "email": "support@example.com"
+            }
+          }
+        }
+
+  CarsResourceDocumentation:
+    Type: AWS::ApiGateway::DocumentationPart
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      Location:
+        Type: RESOURCE
+        Path: /cars
+      Properties: |
+        {
+          "description": "Recurso para gestionar la colección de cars"
+        }
+
+  GetCarsMethodDocumentation:
+    Type: AWS::ApiGateway::DocumentationPart
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      Location:
+        Type: METHOD
+        Path: /cars
+        Method: GET
+      Properties: |
+        {
+          "summary": "Obtener todos los cars",
+          "description": "Retorna una lista completa de todos los cars almacenados en la base de datos",
+          "tags": ["Cars"],
+          "responses": {
+            "200": {
+              "description": "Lista de cars obtenida exitosamente"
+            },
+            "401": {
+              "description": "No autorizado - API Key inválida o faltante"
+            },
+            "500": {
+              "description": "Error interno del servidor"
+            }
+          }
+        }
+
+  PostCarsMethodDocumentation:
+    Type: AWS::ApiGateway::DocumentationPart
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      Location:
+        Type: METHOD
+        Path: /cars
+        Method: POST
+      Properties: |
+        {
+          "summary": "Crear un nuevo car",
+          "description": "Crea un nuevo car en la base de datos con los datos proporcionados",
+          "tags": ["Cars"],
+          "requestBody": {
+            "description": "Datos del car a crear",
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["brand", "model", "year"],
+                  "properties": {
+                    "brand": {
+                      "type": "string",
+                      "description": "Marca del vehículo",
+                      "example": "Toyota"
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "Modelo del vehículo",
+                      "example": "Corolla"
+                    },
+                    "year": {
+                      "type": "integer",
+                      "description": "Año de fabricación",
+                      "minimum": 1900,
+                      "maximum": 2100,
+                      "example": 2023
+                    },
+                    "price": {
+                      "type": "number",
+                      "description": "Precio del vehículo",
+                      "minimum": 0,
+                      "example": 25000.00
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Car creado exitosamente"
+            },
+            "400": {
+              "description": "Solicitud inválida - datos incorrectos"
+            },
+            "401": {
+              "description": "No autorizado - API Key inválida"
+            }
+          }
+        }
+
+  CarResourceDocumentation:
+    Type: AWS::ApiGateway::DocumentationPart
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      Location:
+        Type: RESOURCE
+        Path: /cars/{id}
+      Properties: |
+        {
+          "description": "Recurso para gestionar un car específico por su ID"
+        }
+
+  GetCarMethodDocumentation:
+    Type: AWS::ApiGateway::DocumentationPart
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      Location:
+        Type: METHOD
+        Path: /cars/{id}
+        Method: GET
+      Properties: |
+        {
+          "summary": "Obtener un car por ID",
+          "description": "Retorna los detalles de un car específico identificado por su ID",
+          "tags": ["Cars"],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "description": "ID único del car",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Car encontrado"
+            },
+            "404": {
+              "description": "Car no encontrado"
+            },
+            "401": {
+              "description": "No autorizado"
+            }
+          }
+        }
+
+  PutCarMethodDocumentation:
+    Type: AWS::ApiGateway::DocumentationPart
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      Location:
+        Type: METHOD
+        Path: /cars/{id}
+        Method: PUT
+      Properties: |
+        {
+          "summary": "Actualizar un car",
+          "description": "Actualiza los datos de un car existente",
+          "tags": ["Cars"],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "description": "ID del car a actualizar",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Car actualizado exitosamente"
+            },
+            "404": {
+              "description": "Car no encontrado"
+            },
+            "400": {
+              "description": "Datos inválidos"
+            }
+          }
+        }
+
+  DeleteCarMethodDocumentation:
+    Type: AWS::ApiGateway::DocumentationPart
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      Location:
+        Type: METHOD
+        Path: /cars/{id}
+        Method: DELETE
+      Properties: |
+        {
+          "summary": "Eliminar un car",
+          "description": "Elimina un car de la base de datos",
+          "tags": ["Cars"],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "description": "ID del car a eliminar",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "204": {
+              "description": "Car eliminado exitosamente"
+            },
+            "404": {
+              "description": "Car no encontrado"
+            }
+          }
+        }
+
+  OptionsCarsMockMethodDocumentation:
+    Type: AWS::ApiGateway::DocumentationPart
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      Location:
+        Type: METHOD
+        Path: /cars
+        Method: OPTIONS
+      Properties: |
+        {
+          "summary": "CORS preflight para /cars",
+          "description": "Maneja las solicitudes CORS preflight para el recurso /cars",
+          "tags": ["CORS"]
+        }
+
+  OptionsCarIdMockMethodDocumentation:
+    Type: AWS::ApiGateway::DocumentationPart
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      Location:
+        Type: METHOD
+        Path: /cars/{id}
+        Method: OPTIONS
+      Properties: |
+        {
+          "summary": "CORS preflight para /cars/{id}",
+          "description": "Maneja las solicitudes CORS preflight para el recurso /cars/{id}",
+          "tags": ["CORS"]
+        }
+
+  APIDocumentationVersion:
+    Type: AWS::ApiGateway::DocumentationVersion
+    DependsOn:
+      - APIDocumentation
+      - CarsResourceDocumentation
+      - GetCarsMethodDocumentation
+      - PostCarsMethodDocumentation
+      - CarResourceDocumentation
+      - GetCarMethodDocumentation
+      - PutCarMethodDocumentation
+      - DeleteCarMethodDocumentation
+      - OptionsCarsMockMethodDocumentation
+      - OptionsCarIdMockMethodDocumentation
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      DocumentationVersion: "1.0.0"
+      Description: "Versión 1.0.0 de la documentación de la API"
+
+  CarsAPIDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - OptionsCarsMockMethod
+      - OptionsCarIdMockMethod
+      - ListCarsMethod
+      - PostCarsMethod
+      - GetCarMethod
+      - PutCarMethod
+      - DeleteCarMethod
+      - APIDocumentationVersion
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+
+  CarsAPIStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref CarsRestAPI
+      DeploymentId: !Ref CarsAPIDeployment
+      StageName: prod
+      Description: "Production stage for Cars API"
+      AccessLogSetting:
+        DestinationArn: !GetAtt APIGatewayLogGroup.Arn
+        Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","caller":"$context.identity.caller","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","resourcePath":"$context.resourcePath","status":"$context.status","responseLength":"$context.responseLength"}'
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          ThrottlingRateLimit: 100
+          ThrottlingBurstLimit: 200
+
+# ============================================================================
+# CLOUDWATCH LOGS
+# ============================================================================
+
+  APIGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/apigateway/cars-lambda
+      RetentionInDays: 7
+
+  ApiGatewayAccount:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
+
+# ============================================================================
+# CLOUDWATCH ALARMS
+# ============================================================================
+
+  Api5xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: CarsLambdaAPI-5xxErrors
+      AlarmDescription: Alerta cuando se detectan errores 5xx en la API
+      MetricName: 5XXError
+      Namespace: AWS/ApiGateway
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: ApiName
+          Value: !Ref CarsRestAPI
+
+  ApiHighUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: CarsLambdaAPI-HighUsage
+      AlarmDescription: Alerta cuando hay un alto uso de la API (más de 1000 requests en 5 minutos)
+      MetricName: Count
+      Namespace: AWS/ApiGateway
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1000
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: ApiName
+          Value: !Ref CarsRestAPI
+
+Outputs:
+  GetCarsLambdaArn:
+    Description: ARN de la función Lambda
+    Value: !GetAtt GetCarsLambda.Arn
+  ListCarsLambdaArn:
+    Description: ARN de la función Lambda
+    Value: !GetAtt ListCarsLambda.Arn
+  PostCarsLambdaArn:
+    Description: ARN de la función Lambda
+    Value: !GetAtt PostCarsLambda.Arn
+  DeleteCarsLambdaArn:
+    Description: ARN de la función Lambda
+    Value: !GetAtt DeleteCarsLambda.Arn
+  PutCarsLambdaArn:
+    Description: ARN de la función Lambda
+    Value: !GetAtt PutCarsLambda.Arn
+  ApiGatewayUrl:
+    Description: URL base de la API Gateway
+    Value: !Sub "https://${CarsRestAPI}.execute-api.${AWS::Region}.amazonaws.com/prod"
+  ApiKeyId:
+    Description: ID de la API Key
+    Value: !Ref CarsApiKey
+  CarsEndpoint:
+    Description: Endpoint completo para /cars
+    Value: !Sub "https://${CarsRestAPI}.execute-api.${AWS::Region}.amazonaws.com/prod/cars"
+  APIGatewayLogGroupName:
+    Description: API Gateway CloudWatch Log Group name
+    Value: !Ref APIGatewayLogGroup
+  APIGatewayLogGroupArn:
+    Description: API Gateway CloudWatch Log Group ARN
+    Value: !GetAtt APIGatewayLogGroup.Arn

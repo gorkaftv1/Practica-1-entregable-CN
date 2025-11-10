@@ -1,0 +1,167 @@
+{
+	"Name": "Dettached",
+	"Total Cost": {
+		"monthly": "2.93",
+		"upfront": "0.00",
+		"12 months": "35.16"
+	},
+	"Metadata": {
+		"Currency": "USD",
+		"Locale": "en_US",
+		"Created On": "11/10/2025",
+		"Legal Disclaimer": "AWS Pricing Calculator provides only an estimate of your AWS fees and doesn't include any taxes that might apply. Your actual fees depend on a variety of factors, including your actual usage of AWS services.",
+		"Share Url": "https://calculator.aws/#/estimate?id=37f3c4e28ec13b681e228b78a45df40aab4d7645"
+	},
+	"Groups": {
+		"Services": [
+			{
+				"Service Name": "Amazon API Gateway",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "1.75",
+					"upfront": "0.00",
+					"12 months": "21.00"
+				},
+				"Properties": {
+					"HTTP API requests units": "millions",
+					"Average size of each request": "34 KB",
+					"REST API request units": "thousands",
+					"Cache memory size (GB)": "None",
+					"WebSocket message units": "thousands",
+					"Average message size": "32 KB",
+					"Requests": "500 per month"
+				}
+			},
+			{
+				"Service Name": "AWS Lambda",
+				"Description": "GET cars",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.08",
+					"upfront": "0.00",
+					"12 months": "0.96"
+				},
+				"Properties": {
+					"Architecture": "x86",
+					"Amount of ephemeral storage allocated": "512 MB",
+					"Invoke Mode": "Buffered",
+					"Number of requests": "150000 per month"
+				}
+			},
+			{
+				"Service Name": "AWS Lambda",
+				"Description": "GET cars/id",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.19",
+					"upfront": "0.00",
+					"12 months": "2.28"
+				},
+				"Properties": {
+					"Architecture": "x86",
+					"Invoke Mode": "Buffered",
+					"Number of requests": "150000 per month",
+					"Amount of ephemeral storage allocated": "512 MB"
+				}
+			},
+			{
+				"Service Name": "AWS Lambda",
+				"Description": "POST cars",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.12",
+					"upfront": "0.00",
+					"12 months": "1.44"
+				},
+				"Properties": {
+					"Architecture": "x86",
+					"Invoke Mode": "Buffered",
+					"Number of requests": "100000 per month",
+					"Amount of ephemeral storage allocated": "512 MB"
+				}
+			},
+			{
+				"Service Name": "AWS Lambda",
+				"Description": "PUT cars",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.03",
+					"upfront": "0.00",
+					"12 months": "0.36"
+				},
+				"Properties": {
+					"Architecture": "x86",
+					"Invoke Mode": "Buffered",
+					"Number of requests": "75000 per month",
+					"Amount of ephemeral storage allocated": "512 MB"
+				}
+			},
+			{
+				"Service Name": "AWS Lambda",
+				"Description": "DELETE cars",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.02",
+					"upfront": "0.00",
+					"12 months": "0.24"
+				},
+				"Properties": {
+					"Architecture": "x86",
+					"Invoke Mode": "Buffered",
+					"Number of requests": "25000 per month",
+					"Amount of ephemeral storage allocated": "512 MB"
+				}
+			},
+			{
+				"Service Name": "Amazon Elastic Container Registry",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.01",
+					"upfront": "0.00",
+					"12 months": "0.14"
+				},
+				"Properties": {
+					"DT Inbound: Not selected": "0 TB per month",
+					"DT Outbound: Not selected": "0 TB per month",
+					"Amount of data stored": "122.31 MB per month"
+				}
+			},
+			{
+				"Service Name": "DynamoDB on-demand capacity",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.28",
+					"upfront": "0.00",
+					"12 months": "3.36"
+				},
+				"Properties": {
+					"Table class": "Standard",
+					"Average item size (all attributes)": "1 KB",
+					"Data storage size": "0.5 GB"
+				}
+			},
+			{
+				"Service Name": "Amazon CloudWatch",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.45",
+					"upfront": "0.00",
+					"12 months": "5.43"
+				},
+				"Properties": {
+					"Number of Standard Resolution Alarm Metrics": "2",
+					"Standard Logs: Data Ingested": "0.5 GB"
+				}
+			}
+		]
+	}
+}

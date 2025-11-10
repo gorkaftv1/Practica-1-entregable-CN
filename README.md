@@ -14,23 +14,30 @@ Endpoints disponibles:
 
 En este proyecto se han definido dos alternativas de despliegue que comparten la misma base de datos: una arquitectura acoplada (basada en contenedores/ECS) y una arquitectura desacoplada (basada en funciones Lambda). Las estimaciones de coste en este documento se han realizado con un supuesto de tráfico de referencia: 1.000 llamadas semanales (≈4.000 llamadas/mes).
 
+
+
 ## 2. Arquitectura Acoplada
 
 ### 2.1 Diagrama
 
-<!-- Añadir aquí la imagen del diagrama de la arquitectura acoplada -->
-
 ![Diagrama arquitectura acoplada](./api/diagramaA.png)
 
-#### TODO
+Este diagrama corresponde a lo siguiente:
+- Api Gateway: es una `RESTAPI` que está documentada con `OPENAPI` en `AWS::RESTAPI:DOCUMENTATION`. La api se depliega en producción y los endpoints que corresponden al CRUD a la `AWS::DynamoDB` están protegidos por el uso de una `API-Key`.Depende de 3 recursos con sus respectivos endpoints y permisos:
+  - `/cars` -> GET, POST
+  - `/cars/{id}` -> GET, PUT, DELETE
+  - `/health` -> GET
+- Load Balancer: 
 
-- Revisar el usage plan, y comprobar si sería buena idea poner un límite mensual
-- Ruta /api-docs incorrecta, error 403 {
-  "success": false,
-  "error": "Route not found"
-}
+### 2.2 Despliegue
 
-### 2.2 Flujo
+1. Configuramos el AWS CLI
+2. En AWS Cloudformation, creamos la pila usando la plantilla `/api/cloudformation/dynamodb-only.yml`
+3. Ahora creamos la pila `/api/cloudformation/ecr.yml`
+4. Ahora se monta y se sube la imagen de Docker al ecr, para ello lanzamos el script `build-and-push.ps1 $ECR_NAME $PATH_TO_DOCKERFILE_DIRECTORY`
+5. Por último se despliega la última pila que está definida en `/api/cloudformation/main.yml` 
+
+### 2.3 Flujo
 
 1. El cliente realiza una petición al endpoint de la API.
 2. API Gateway recibe la petición y la enruta al Network Load Balancer (NLB).
@@ -40,35 +47,81 @@ En este proyecto se han definido dos alternativas de despliegue que comparten la
 
 Diagrama de alto nivel del flujo: Cliente → API Gateway → NLB → ECS Service → ECS Task → DynamoDB → Cliente.
 
-### 2.3 Recursos
+### 2.4 Recursos Definidos en `main.yml`, `ecr.yml` y `dynamodb-only.yml`
 
-- API Gateway (configuración de rutas y métodos).
-- Network Load Balancer (NLB) para distribución de tráfico.
-- VPC link
-- ECS Service y ECS Task (Fargate).
-- ECR para imágenes docker
-- Imagen Docker construida desde `api/Dockerfile`.
-- Tabla DynamoDB para persistencia (`api/src/models/Car.js`).
-- Plantillas CloudFormation: `api/cloudformation/` (incluye `main.yml`, `ecr.yml`, `dynamodb-only.yml`).
+* VPC Link
+* S3 Gateway Endpoint
+* DynamoDB Gateway Endpoint
+* Subnets
+* RouteTables
+* Security Group VPC y Security Group ECS
+* ECS Cluster
 
-### 2.4 Tabla de precios
-#### A Costes básicos
-- Llamadas mensuales 5000 
-- Tamaño medio de request 2KB(JSON típico)
-- Tamaño medio response 5KB(lista corta/recurso individual)
-- unos 7KB por request
-- 100-200 ms 
-- Overhead TCP/IP +20% mas/menos
-- Tiempo de ejecución total al mes 13 minutos mas/menos
-#### B Estimación
-Supuestos principales: 4.000 llamadas/mes; una tarea ECS pequeña en ejecución continua; DynamoDB en modo on-demand o capacidad mínima; moneda EUR.
 
-| Periodo | Coste estimado (EUR) | Comentarios |
-|---|---:|---|
-| 1 mes | 40 – 120 € | Incluye costes de ECS (Fargate/EC2) y NLB; varía según tamaño de la tarea y si se usa Fargate o EC2. |
-| 1 año | 480 – 1.440 € | Proyección anual del rango mensual. |
+### 2.5 Tabla de precios
+💰 Costos de los recursos en tu main.yml
+RECURSOS GRATIS 🎉
+✅ VPC - GRATIS
+✅ Subnets (2 privadas) - GRATIS
+✅ Route Tables - GRATIS
+✅ Security Groups (2) - GRATIS
+✅ VPC Link - GRATIS
+✅ ECS Cluster - GRATIS (solo pagas por las tareas)
+✅ Task Definition - GRATIS
+✅ Target Group - GRATIS
+✅ S3 Gateway Endpoint - GRATIS
+✅ DynamoDB Gateway Endpoint - GRATIS
+RECURSOS CON COSTO 💵
+1. Network Load Balancer (NLB)
+Costo fijo: $0.0225/hora = ~$16.20/mes
+Datos procesados: $0.006/GB
+📊 Total estimado: $16-20/mes
+2. ECS Fargate Tasks
+Por cada tarea (0.25 vCPU, 0.5 GB RAM):
 
-Notas: el coste puede aumentar si se requieren múltiples tareas en paralelo, mayores recursos CPU/memoria o mayor transferencia de datos saliente.
+vCPU: $0.04048/hora por vCPU = $0.01012/hora (0.25 vCPU)
+Memoria: $0.004445/hora por GB = $0.0022225/hora (0.5 GB)
+Total por hora: $0.0123425/hora
+📊 Total por tarea 24/7: ~$8.90/mes
+Con 1 tarea: $8.90/mes
+3. VPC Endpoints (Interface Type)
+Precio por endpoint: $0.01/hora = ~$7.20/mes
+
+Tu plantilla tiene 3 Interface Endpoints:
+
+ECR API Endpoint: $7.20/mes
+ECR DKR Endpoint: $7.20/mes
+CloudWatch Logs Endpoint: $7.20/mes
+Subtotal: $21.60/mes
+
+Datos procesados: $0.01/GB (adicional)
+
+Estimado: ~$2-5/mes dependiendo del uso
+📊 Total Interface Endpoints: $23-26/mes
+
+4. API Gateway
+Llamadas: $3.50 por millón de requests
+Transferencia de datos: $0.09/GB (primeros 10 TB)
+📊 Estimado: $2-5/mes (uso moderado)
+5. API Key
+✅ GRATIS
+6. CloudWatch Logs
+Ingesta: $0.50/GB
+Almacenamiento: $0.03/GB/mes
+📊 Estimado: $1-3/mes (dependiendo de cuánto loguees)
+7. DynamoDB (asumiendo que ya lo tienes)
+No está en este template, pero si usas:
+
+Modo On-Demand: $1.25 por millón de escrituras, $0.25 por millón de lecturas
+📊 Estimado: $1-5/mes (uso bajo)
+RESUMEN MENSUAL 📊
+Recurso	Costo/mes
+NLB	$16-20
+ECS Fargate (1 tarea)	$9
+VPC Endpoints (3 Interface)	$23-26
+API Gateway	$2-5
+CloudWatch Logs	$1-3
+TOTAL	~$51-63/mes
 
 ## 3. Arquitectura Desacoplada
 
@@ -82,6 +135,14 @@ Notas: el coste puede aumentar si se requieren múltiples tareas en paralelo, ma
 #### TODO
 
 - Añadir quota mensual de unas 5000 llamadas mensuales, para que no cobren de más
+
+### 3.2 Despliegue
+
+1. Configuramos el AWS CLI
+2. En AWS Cloudformation, creamos la pila usando la plantilla `/api/cloudformation/dynamodb-only.yml` (SI NO SE HA HECHO YA EN LA ARQUITECTURA ACOPLADA, está compartida la misma DB)
+3. Ahora creamos la pila `/detached/cloudformation/ecr.yml`
+4. Ahora se monta y se sube la imagen de Docker al ecr, para ello lanzamos el script `build-and-push.ps1 $ECR_NAME $PATH_TO_DOCKERFILE_DIRECTORY`
+5. Por último se despliega la última pila que está definida en `/detached/cloudformation/lambda.yml` 
 
 ### 3.2 Flujo
 

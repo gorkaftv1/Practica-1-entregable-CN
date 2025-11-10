@@ -2,7 +2,6 @@ const express = require('express')
 const cors = require('cors')
 
 const serverConfig = require('./src/config/server')
-const { setupSwagger } = require('./src/config/swagger')
 
 const carRoutes = require('./src/routes/carRoutes')
 
@@ -12,49 +11,9 @@ app.use(cors(serverConfig.cors || {}))
 app.use(express.json(serverConfig.bodyParser && serverConfig.bodyParser.json ? serverConfig.bodyParser.json : {}))
 app.use(express.urlencoded(serverConfig.bodyParser && serverConfig.bodyParser.urlencoded ? serverConfig.bodyParser.urlencoded : { extended: true }))
 
-if (typeof setupSwagger === 'function') {
-  try {
-    setupSwagger(app)
-    console.log('Swagger mounted via setupSwagger()')
-  } catch (err) {
-    console.warn('Failed to mount swagger via setupSwagger():', err.message)
-  }
-} else {
-  try {
-    const { specs, swaggerUi } = require('./src/config/swagger')
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, { explorer: true }))
-    console.log('Swagger UI available at /api-docs')
-  } catch (err) {
-  }
-}
-
 // Rutas
 app.use('/cars', carRoutes)
 
-/**
- * @swagger
- * /health:
- *   get:
- *     summary: Health check del servidor
- *     tags: [Health]
- *     responses:
- *       200:
- *         description: El servidor está funcionando correctamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "API is running"
- *                 environment:
- *                   type: string
- *                   example: "production"
- */
 // Health endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({

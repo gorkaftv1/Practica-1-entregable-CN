@@ -1,0 +1,522 @@
+{
+	"info": {
+		"_postman_id": "12345678-abcd-1234-abcd-1234567890ab",
+		"name": "Cars API - CRUD Operations",
+		"description": "Colección completa para probar la API REST de gestión de vehículos en AWS.\n\nArquitecturas soportadas:\n- Acoplada (ECS Fargate + NLB + API Gateway)\n- Desacoplada (Lambda + API Gateway)\n\nEndpoints:\n- POST /cars - Crear vehículo\n- GET /cars - Listar todos los vehículos\n- GET /cars/{id} - Obtener vehículo por ID\n- PUT /cars/{id} - Actualizar vehículo\n- DELETE /cars/{id} - Eliminar vehículo\n- GET /health - Health check\n- OPTIONS /cars - CORS preflight\n- OPTIONS /cars/{id} - CORS preflight",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has status ok\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('status');",
+							"    pm.expect(jsonData.status).to.eql('ok');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{API_BASE_URL}}/health",
+					"host": [
+						"{{API_BASE_URL}}"
+					],
+					"path": [
+						"health"
+					]
+				},
+				"description": "Health check endpoint - No requiere API Key"
+			},
+			"response": []
+		},
+		{
+			"name": "Create Car",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Response has id\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('id');",
+							"    pm.environment.set(\"LAST_CAR_ID\", jsonData.id);",
+							"    console.log(\"Created car with ID: \" + jsonData.id);",
+							"});",
+							"",
+							"pm.test(\"Response has all required fields\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('brand');",
+							"    pm.expect(jsonData).to.have.property('model');",
+							"    pm.expect(jsonData).to.have.property('year');",
+							"    pm.expect(jsonData).to.have.property('price');",
+							"});",
+							"",
+							"pm.test(\"Brand is Toyota\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.brand).to.eql(\"Toyota\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "{{API_KEY}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"brand\": \"Toyota\",\n    \"model\": \"Corolla\",\n    \"year\": 2023,\n    \"price\": 25000\n}"
+				},
+				"url": {
+					"raw": "{{API_BASE_URL}}/cars",
+					"host": [
+						"{{API_BASE_URL}}"
+					],
+					"path": [
+						"cars"
+					]
+				},
+				"description": "Crea un nuevo vehículo en la base de datos.\n\nRequiere API Key.\n\nBody (JSON):\n- brand (string, requerido): Marca del vehículo\n- model (string, requerido): Modelo del vehículo\n- year (integer, requerido): Año de fabricación\n- price (number, opcional): Precio del vehículo"
+			},
+			"response": []
+		},
+		{
+			"name": "List All Cars",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response is an array\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Array has at least one element\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.length).to.be.above(0);",
+							"});",
+							"",
+							"pm.test(\"First car has required fields\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    if (jsonData.length > 0) {",
+							"        pm.expect(jsonData[0]).to.have.property('id');",
+							"        pm.expect(jsonData[0]).to.have.property('brand');",
+							"        pm.expect(jsonData[0]).to.have.property('model');",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "{{API_KEY}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{API_BASE_URL}}/cars",
+					"host": [
+						"{{API_BASE_URL}}"
+					],
+					"path": [
+						"cars"
+					]
+				},
+				"description": "Obtiene la lista completa de todos los vehículos almacenados.\n\nRequiere API Key.\n\nRetorna un array de objetos con todos los vehículos."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Car by ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 or 404\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    pm.test(\"Response has id\", function () {",
+							"        var jsonData = pm.response.json();",
+							"        pm.expect(jsonData).to.have.property('id');",
+							"    });",
+							"    ",
+							"    pm.test(\"Response has all fields\", function () {",
+							"        var jsonData = pm.response.json();",
+							"        pm.expect(jsonData).to.have.property('brand');",
+							"        pm.expect(jsonData).to.have.property('model');",
+							"        pm.expect(jsonData).to.have.property('year');",
+							"    });",
+							"}",
+							"",
+							"if (pm.response.code === 404) {",
+							"    pm.test(\"404 response has error message\", function () {",
+							"        var jsonData = pm.response.json();",
+							"        pm.expect(jsonData).to.have.property('error');",
+							"    });",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "{{API_KEY}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{API_BASE_URL}}/cars/{{LAST_CAR_ID}}",
+					"host": [
+						"{{API_BASE_URL}}"
+					],
+					"path": [
+						"cars",
+						"{{LAST_CAR_ID}}"
+					]
+				},
+				"description": "Obtiene un vehículo específico por su ID.\n\nRequiere API Key.\n\nPath parameter:\n- id: UUID del vehículo\n\nRetorna:\n- 200: Objeto del vehículo\n- 404: Vehículo no encontrado"
+			},
+			"response": []
+		},
+		{
+			"name": "Update Car",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 or 404\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+							"});",
+							"",
+							"if (pm.response.code === 200) {",
+							"    pm.test(\"Response has updated fields\", function () {",
+							"        var jsonData = pm.response.json();",
+							"        pm.expect(jsonData).to.have.property('id');",
+							"        pm.expect(jsonData).to.have.property('brand');",
+							"    });",
+							"    ",
+							"    pm.test(\"Brand was updated to Honda\", function () {",
+							"        var jsonData = pm.response.json();",
+							"        pm.expect(jsonData.brand).to.eql(\"Honda\");",
+							"    });",
+							"}",
+							"",
+							"if (pm.response.code === 404) {",
+							"    pm.test(\"404 response has error\", function () {",
+							"        var jsonData = pm.response.json();",
+							"        pm.expect(jsonData).to.have.property('error');",
+							"    });",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "{{API_KEY}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"brand\": \"Honda\",\n    \"model\": \"Civic\",\n    \"year\": 2024,\n    \"price\": 27000\n}"
+				},
+				"url": {
+					"raw": "{{API_BASE_URL}}/cars/{{LAST_CAR_ID}}",
+					"host": [
+						"{{API_BASE_URL}}"
+					],
+					"path": [
+						"cars",
+						"{{LAST_CAR_ID}}"
+					]
+				},
+				"description": "Actualiza un vehículo existente.\n\nRequiere API Key.\n\nPath parameter:\n- id: UUID del vehículo\n\nBody (JSON): Todos los campos del vehículo (reemplaza completo)\n\nRetorna:\n- 200: Vehículo actualizado\n- 404: Vehículo no encontrado"
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Car",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 204 or 404\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([204, 404]);",
+							"});",
+							"",
+							"if (pm.response.code === 204) {",
+							"    pm.test(\"Response body is empty\", function () {",
+							"        pm.expect(pm.response.text()).to.eql(\"\");",
+							"    });",
+							"}",
+							"",
+							"if (pm.response.code === 404) {",
+							"    pm.test(\"404 response has error\", function () {",
+							"        var jsonData = pm.response.json();",
+							"        pm.expect(jsonData).to.have.property('error');",
+							"    });",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "{{API_KEY}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{API_BASE_URL}}/cars/{{LAST_CAR_ID}}",
+					"host": [
+						"{{API_BASE_URL}}"
+					],
+					"path": [
+						"cars",
+						"{{LAST_CAR_ID}}"
+					]
+				},
+				"description": "Elimina un vehículo de la base de datos.\n\nRequiere API Key.\n\nPath parameter:\n- id: UUID del vehículo\n\nRetorna:\n- 204: Vehículo eliminado (sin contenido)\n- 404: Vehículo no encontrado"
+			},
+			"response": []
+		},
+		{
+			"name": "OPTIONS /cars (CORS Preflight)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Has CORS headers\", function () {",
+							"    pm.response.to.have.header(\"Access-Control-Allow-Origin\");",
+							"    pm.response.to.have.header(\"Access-Control-Allow-Methods\");",
+							"    pm.response.to.have.header(\"Access-Control-Allow-Headers\");",
+							"});",
+							"",
+							"pm.test(\"Allows all origins\", function () {",
+							"    pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.eql(\"*\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "OPTIONS",
+				"header": [],
+				"url": {
+					"raw": "{{API_BASE_URL}}/cars",
+					"host": [
+						"{{API_BASE_URL}}"
+					],
+					"path": [
+						"cars"
+					]
+				},
+				"description": "CORS preflight request para /cars.\n\nNo requiere API Key.\n\nRetorna headers de CORS permitidos."
+			},
+			"response": []
+		},
+		{
+			"name": "OPTIONS /cars/{id} (CORS Preflight)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Has CORS headers\", function () {",
+							"    pm.response.to.have.header(\"Access-Control-Allow-Origin\");",
+							"    pm.response.to.have.header(\"Access-Control-Allow-Methods\");",
+							"    pm.response.to.have.header(\"Access-Control-Allow-Headers\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "OPTIONS",
+				"header": [],
+				"url": {
+					"raw": "{{API_BASE_URL}}/cars/test-id",
+					"host": [
+						"{{API_BASE_URL}}"
+					],
+					"path": [
+						"cars",
+						"test-id"
+					]
+				},
+				"description": "CORS preflight request para /cars/{id}.\n\nNo requiere API Key.\n\nRetorna headers de CORS permitidos."
+			},
+			"response": []
+		},
+		{
+			"name": "Test 401 - Missing API Key",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 401 or 403\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+							"});",
+							"",
+							"pm.test(\"Response has error message\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('message');",
+							"    pm.expect(jsonData.message).to.include('API');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{API_BASE_URL}}/cars",
+					"host": [
+						"{{API_BASE_URL}}"
+					],
+					"path": [
+						"cars"
+					]
+				},
+				"description": "Prueba de error 401 cuando no se proporciona API Key.\n\nEste request NO incluye el header x-api-key.\n\nEspera:\n- 401 Unauthorized o 403 Forbidden\n- Mensaje de error sobre API Key faltante"
+			},
+			"response": []
+		},
+		{
+			"name": "Test 404 - Car Not Found",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							"pm.test(\"Response has error message\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('error');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "{{API_KEY}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{API_BASE_URL}}/cars/non-existent-id-12345",
+					"host": [
+						"{{API_BASE_URL}}"
+					],
+					"path": [
+						"cars",
+						"non-existent-id-12345"
+					]
+				},
+				"description": "Prueba de error 404 cuando se busca un vehículo que no existe.\n\nUsa un ID inválido/inexistente.\n\nEspera:\n- 404 Not Found\n- Mensaje de error indicando que el vehículo no fue encontrado"
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "API_BASE_URL",
+			"value": "https://xxxxxxxx.execute-api.us-east-1.amazonaws.com/prod",
+			"type": "string"
+		},
+		{
+			"key": "API_KEY",
+			"value": "your-api-key-here",
+			"type": "string"
+		},
+		{
+			"key": "LAST_CAR_ID",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

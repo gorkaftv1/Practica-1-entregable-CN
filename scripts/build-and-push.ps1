@@ -18,7 +18,7 @@ try {
     $dockerfileArg = "-f `"$Dockerfile`""
   }
 
-  aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 975050237180.dkr.ecr.us-east-1.amazonaws.com
+  aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin {REPLACE}.dkr.ecr.us-east-1.amazonaws.com
 
   Write-Host "Building image '$EcrName' from context '$Path'..."
   if ($dockerfileArg -ne "") {
@@ -28,7 +28,7 @@ try {
     docker build --platform linux/amd64 --provenance=false -t $EcrName $Path
   }
 
-  $remote = "975050237180.dkr.ecr.us-east-1.amazonaws.com/${EcrName}:latest"
+  $remote = "{REPLACE}.dkr.ecr.us-east-1.amazonaws.com/${EcrName}:latest"
   docker tag ${EcrName}:latest $remote
   docker push $remote
 

@@ -1,14 +1,14 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Cars ECR Repository"
+Description: "Single ECR repository for the cars service (shared image)."
 
 Parameters:
   RepositoryName:
     Type: String
-    Default: cars-app
-    Description: ECR repository name
+    Default: "cars-service"
+    Description: "ECR repository name for the shared image."
 
 Resources:
-  ECRRepository:
+  CarsEcrRepo:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: !Ref RepositoryName
@@ -20,7 +20,7 @@ Resources:
             "rules": [
               {
                 "rulePriority": 1,
-                "description": "Mantain only last 2 images",
+                "description": "Keep only last 2 images",
                 "selection": {
                   "tagStatus": "any",
                   "countType": "imageCountMoreThan",
@@ -35,13 +35,7 @@ Resources:
 
 Outputs:
   RepositoryUri:
-    Description: ECR URI
-    Value: !GetAtt ECRRepository.RepositoryUri
-
-  RepositoryName:
-    Description: Repository Name
-    Value: !Ref RepositoryName
-
-  RepositoryArn:
-    Description: Repository ARN
-    Value: !GetAtt ECRRepository.Arn
+    Description: ECR repository URI
+    Value: !GetAtt CarsEcrRepo.RepositoryUri
+    Export:
+      Name: !Sub "${AWS::StackName}-CarsEcrRepoUri"

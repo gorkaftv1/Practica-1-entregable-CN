@@ -1,0 +1,126 @@
+{
+	"Name": "Attached",
+	"Total Cost": {
+		"monthly": "42.39",
+		"upfront": "0.00",
+		"12 months": "508.68"
+	},
+	"Metadata": {
+		"Currency": "USD",
+		"Locale": "en_US",
+		"Created On": "11/10/2025",
+		"Legal Disclaimer": "AWS Pricing Calculator provides only an estimate of your AWS fees and doesn't include any taxes that might apply. Your actual fees depend on a variety of factors, including your actual usage of AWS services.",
+		"Share Url": "https://calculator.aws/#/estimate?id=abe74af10192952a29f2695a46e5c10fb2f78822"
+	},
+	"Groups": {
+		"Services": [
+			{
+				"Service Name": "Amazon API Gateway",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "1.75",
+					"upfront": "0.00",
+					"12 months": "21.00"
+				},
+				"Properties": {
+					"HTTP API requests units": "millions",
+					"Average size of each request": "34 KB",
+					"REST API request units": "thousands",
+					"Cache memory size (GB)": "None",
+					"WebSocket message units": "thousands",
+					"Average message size": "32 KB",
+					"Requests": "500 per month"
+				}
+			},
+			{
+				"Service Name": "AWS Fargate",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "9.01",
+					"upfront": "0.00",
+					"12 months": "108.12"
+				},
+				"Properties": {
+					"Operating system": "Linux",
+					"CPU Architecture": "x86",
+					"Average duration": "730 hours",
+					"Number of tasks or pods": "1 per month",
+					"Amount of ephemeral storage allocated for Amazon ECS": "20 GB"
+				}
+			},
+			{
+				"Service Name": "Amazon Elastic Container Registry",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.01",
+					"upfront": "0.00",
+					"12 months": "0.07"
+				},
+				"Properties": {
+					"Amount of data stored": "61.97 MB per month"
+				}
+			},
+			{
+				"Service Name": "Network Load Balancer",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "16.44",
+					"upfront": "0.00",
+					"12 months": "197.28"
+				},
+				"Properties": {
+					"Number of Network Load Balancers": "1",
+					"Processed bytes per NLB for TCP": "0.1 GB per month",
+					"Average number of new TCP connections": "1 per second",
+					"Average TCP connection duration": "1 seconds"
+				}
+			},
+			{
+				"Service Name": "AWS PrivateLink",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "14.60",
+					"upfront": "0.00",
+					"12 months": "175.20"
+				},
+				"Properties": {
+					"Number of VPC Interface endpoints per AWS region": "1"
+				}
+			},
+			{
+				"Service Name": "DynamoDB on-demand capacity",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.28",
+					"upfront": "0.00",
+					"12 months": "3.36"
+				},
+				"Properties": {
+					"Table class": "Standard",
+					"Average item size (all attributes)": "1 KB",
+					"Data storage size": "0.5 GB"
+				}
+			},
+			{
+				"Service Name": "Amazon CloudWatch",
+				"Region": "US East (N. Virginia)",
+				"Status": "",
+				"Service Cost": {
+					"monthly": "0.30",
+					"upfront": "0.00",
+					"12 months": "3.61"
+				},
+				"Properties": {
+					"Number of Standard Resolution Alarm Metrics": "2",
+					"Standard Logs: Data Ingested": "0.2 GB"
+				}
+			}
+		]
+	}
+}
